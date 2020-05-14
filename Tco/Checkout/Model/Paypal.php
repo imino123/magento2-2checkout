@@ -4,9 +4,9 @@ namespace Tco\Checkout\Model;
 
 use Magento\Quote\Model\Quote\Payment;
 
-class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
+class Paypal extends \Magento\Payment\Model\Method\AbstractMethod
 {
-    const CODE = 'tco_checkout';
+    const CODE = 'tco_paypal';
     protected $_code = self::CODE;
     protected $_isGateway = false;
     protected $_isOffline = false;
@@ -27,8 +27,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         'LKR', 'SEK', 'CHF', 'SYP', 'THB', 'TOP', 'TTD', 'TRY', 'UAH',
         'AED', 'USD', 'VUV', 'VND', 'XOF', 'YER'
     );
-    protected $_formBlockType = 'Tco\Checkout\Block\Form\Checkout';
-    protected $_infoBlockType = 'Tco\Checkout\Block\Info\Checkout';
+    protected $_formBlockType = 'Tco\Checkout\Block\Form\Paypal';
+    protected $_infoBlockType = 'Tco\Checkout\Block\Info\Paypal';
 
     protected $httpClientFactory;
     protected $orderSender;
@@ -41,7 +41,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Payment\Model\Method\Logger $logger,
-        \Tco\Checkout\Helper\Checkout $helper,
+        \Tco\Checkout\Helper\Paypal $helper,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory
     ) {
@@ -108,10 +108,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $params["return_url"]           = $this->getCancelUrl();
         $params["x_receipt_link_url"]   = $this->getReturnUrl();
         $params["purchase_step"]        = "payment-method";
-
-        if ($this->getConfigData('demo_mode')) {
-            $params["demo"] = "Y";
-        }
+        $params["paypal_direct"]        = "Y";
 
         return $params;
     }
@@ -179,12 +176,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     {
         $url = $this->helper->getUrl($this->getConfigData('cancel_url'));
         return $url;
-    }
-
-    public function getInline()
-    {
-        $value = $this->getConfigData('inline');
-        return $value;
     }
 
     public function getOrderStatus()

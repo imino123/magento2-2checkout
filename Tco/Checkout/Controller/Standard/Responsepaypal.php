@@ -2,7 +2,7 @@
 
 namespace Tco\Checkout\Controller\Standard;
 
-class Response extends \Tco\Checkout\Controller\Checkout
+class Responsepaypal extends \Tco\Checkout\Controller\Paypal
 {
 
     public function execute()
@@ -24,7 +24,7 @@ class Response extends \Tco\Checkout\Controller\Checkout
             $quote = $this->_quote->load($quoteId);
 
             // Setup params for hash check
-            $orderNumber = $paymentMethod->getConfigData('demo_mode') ? '1' : $params['order_number'];
+            $orderNumber = $params['order_number'];
             $orderTotal = number_format($quote->getGrandTotal(), 2, '.', '');
             $orderKey = $this->getRequest()->getParam('key');
 
