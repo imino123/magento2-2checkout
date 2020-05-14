@@ -12,13 +12,16 @@
 3. There you can find the 'Merchant Code', 'Secret key', and the 'Buy link secret word'
 4. Navigate to **Dashboard** → **Integrations** → **Ipn Settings**
 5. Set the IPN URL which should be https://your-site-name.com/tco/ipn/notification/
+    
     5a. Example IPN URL: http://example.com/tco/ipn/notification/
 6. Enable 'Triggers' in the IPN section. It’s simpler to enable all the triggers. Those who are not required will simply not be used.
 
 #### Magento Settings
 
 1. Download the 2Checkout payment module from https://github.com/2Checkout/magento2-2checkout
+    
     1a. Under the 'Releases' you can find the latest release.
+    
     1b. You can also download the connector directly from the 'master' branch as it always reflects the latest release.
 2. Upload the included **Tco** directory to 'app/code/' your Magento root directory on your server.
 3. On your server, install the module by running `bin/magento setup:upgrade` in your magento root directory, then in your magento admin flush your Magento cache under **System**->**Cache Management** and reindex all templates under **System**->**Index Management**.
