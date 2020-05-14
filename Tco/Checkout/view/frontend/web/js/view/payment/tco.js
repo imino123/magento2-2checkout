@@ -16,10 +16,6 @@ define(
             {
                 type: 'tco_api',
                 component: 'Tco_Checkout/js/view/payment/method-renderer/tco-api'
-            },
-            {
-                type: 'tco_paypal',
-                component: 'Tco_Checkout/js/view/payment/method-renderer/tco-paypal'
             }
         );
         return Component.extend({});
