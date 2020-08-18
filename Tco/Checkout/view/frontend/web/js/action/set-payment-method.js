@@ -8,17 +8,15 @@ define(
         'Magento_Checkout/js/model/error-processor',
         'Magento_Customer/js/model/customer',
         'Magento_Checkout/js/model/full-screen-loader',
-        'Tco_Checkout/js/form/form-builder',
-        'Tco_Checkout/js/form/direct'
+        'TwoCoInlineCart'
     ],
-    function ($, quote, customerData, urlBuilder, storage, errorProcessor, customer, fullScreenLoader, formBuilder, direct) {
+    function ($, quote, customerData, urlBuilder, storage, errorProcessor, customer, fullScreenLoader, TwoCoInlineCart) {
         'use strict';
 
         return function (messageContainer) {
 
             var serviceUrl,
-                email,
-                form;
+                email;
 
             if (!customer.isLoggedIn()) {
                 email = quote.guestEmail;
@@ -26,14 +24,9 @@ define(
                 email = customer.customerData.email;
             }
 
-            var initInline = function () {
-                $('#tco_lightbox_iframe').css('visibility', 'hidden');
-                $('#tco_lightbox').show();
-            };
-
             serviceUrl = window.checkoutConfig.payment.tco_checkout.redirectUrl+'?email='+email;
             fullScreenLoader.startLoader();
-            
+
             $.ajax({
                 url: serviceUrl,
                 type: 'post',
@@ -43,18 +36,36 @@ define(
                 success: function (response) {
                     if ($.type(response) === 'object' && !$.isEmptyObject(response)) {
                         $('#tco_payment_form').remove();
-                        form = formBuilder.build(
-                            {
-                                action: response.url,
-                                fields: response.fields
-                            }
-                        );
-                        if (response.inline === "1") {
-                            initInline();
-                            formBuilder.makeInline(form);
+                        var data = response.fields;
+                        if(response.inline && response.inline == 1) {
+
+                            TwoCoInlineCart.setup.setConfig('cart', {'host': response.url});
+                            TwoCoInlineCart.setup.setMerchant(data.merchant);
+                            TwoCoInlineCart.setup.setMode(data.mode);
+                            TwoCoInlineCart.register();
+
+                            TwoCoInlineCart.cart.setLanguage(data.language);
+                            TwoCoInlineCart.cart.setCurrency(data.currency);
+                            TwoCoInlineCart.cart.setTest(data.test);
+                            TwoCoInlineCart.cart.setOrderExternalRef(data['order-ext-ref']);
+                            TwoCoInlineCart.cart.setExternalCustomerReference(data['customer-ext-ref']);
+                            TwoCoInlineCart.cart.setSource(data.src);
+                            TwoCoInlineCart.cart.setReturnMethod(data['return-method']);
+                            TwoCoInlineCart.products.removeAll();
+                            TwoCoInlineCart.products.addMany(data.products);
+                            TwoCoInlineCart.billing.setData(data.billing_address);
+                            TwoCoInlineCart.shipping.setData(data.shipping_address);
+                            TwoCoInlineCart.cart.setSignature(data.signature);
+                            TwoCoInlineCart.cart.checkout();
+                            fullScreenLoader.stopLoader();
                         }
-                        customerData.invalidate(['cart']);
-                        form.submit();
+                        else {
+                            if(response.method == "GET"){
+                                fullScreenLoader.stopLoader();
+                                //customerData.invalidate(['cart']);
+                                window.location.href = response.url + $.param(data);
+                            }
+                        }
                     } else {
                         fullScreenLoader.stopLoader();
                         alert({

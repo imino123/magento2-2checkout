@@ -41,8 +41,7 @@ class TransactionDetails extends \Magento\Backend\Block\Template
     {
         return (
             $this->getPayment()->getMethod() === \Tco\Checkout\Model\Checkout::CODE ||
-            $this->getPayment()->getMethod() === \Tco\Checkout\Model\Api::CODE ||
-            $this->getPayment()->getMethod() === \Tco\Checkout\Model\Paypal::CODE
+            $this->getPayment()->getMethod() === \Tco\Checkout\Model\Api::CODE
         ) ? parent::_toHtml() : '';
     }
 }
