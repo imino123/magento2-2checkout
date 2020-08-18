@@ -169,7 +169,7 @@ class Api extends \Magento\Payment\Model\Method\Cc
     public function buildPaymentDetails($q, $token)
     {
         return [
-            'Type'          => 'EES_TOKEN_PAYMENT',
+            'Type'          => $this->getConfigData('demo_mode') == 1 ? 'TEST' : 'EES_TOKEN_PAYMENT',
             'Currency'      => $q->getCurrency()->getQuoteCurrencyCode(),
             'CustomerIP'    => $q->getRemoteIp(),
             'PaymentMethod' => [
@@ -266,10 +266,6 @@ class Api extends \Magento\Payment\Model\Method\Cc
             'BillingDetails'            => $billing_address,
             'PaymentDetails'            => $payment_details,
         ];
-
-        if ($this->testOrder()) {
-            $orderArr['test'] = 1;
-        }
 
         $sellerId = $this->getSellerId();
         $requestDateTime = $this->_helper->composeRequestDateTime();
@@ -401,12 +397,6 @@ class Api extends \Magento\Payment\Model\Method\Cc
     public function getSecretKey()
     {
         return $this->getConfigData('secret_key');
-    }
-
-
-    public function testOrder()
-    {
-        return $this->getConfigData('demo_mode');
     }
 
     public function getSellerId()

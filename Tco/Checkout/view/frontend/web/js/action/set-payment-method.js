@@ -40,25 +40,22 @@ define(
                         if(response.inline && response.inline == 1) {
 
                             TwoCoInlineCart.setup.setConfig('cart', {'host': response.url});
-                            TwoCoInlineCart.setup.setMerchant(data.setup.merchant);
-                            TwoCoInlineCart.setup.setMode(data.setup.mode);
+                            TwoCoInlineCart.setup.setMerchant(data.merchant);
+                            TwoCoInlineCart.setup.setMode(data.mode);
                             TwoCoInlineCart.register();
 
-
-                            TwoCoInlineCart.cart.setCurrency(data.cart.currency);
-                            TwoCoInlineCart.cart.setLanguage(data.cart.language);
-                            TwoCoInlineCart.cart.setReturnMethod({type: data.cart["return-type"], url: data.cart['return-url']});
-                            TwoCoInlineCart.cart.setTest(data.cart.test);
-                            TwoCoInlineCart.cart.setOrderExternalRef(data.cart["order-ext-ref"]);
-                            TwoCoInlineCart.cart.setCustomerReference(customer.customerData.id);
-                            TwoCoInlineCart.cart.setExternalCustomerReference(data.cart["customer-ext-ref"]);
-                            TwoCoInlineCart.cart.setSource(data.cart.src);
-
+                            TwoCoInlineCart.cart.setLanguage(data.language);
+                            TwoCoInlineCart.cart.setCurrency(data.currency);
+                            TwoCoInlineCart.cart.setTest(data.test);
+                            TwoCoInlineCart.cart.setOrderExternalRef(data['order-ext-ref']);
+                            TwoCoInlineCart.cart.setExternalCustomerReference(data['customer-ext-ref']);
+                            TwoCoInlineCart.cart.setSource(data.src);
+                            TwoCoInlineCart.cart.setReturnMethod(data['return-method']);
                             TwoCoInlineCart.products.removeAll();
-                            TwoCoInlineCart.products.addMany(data.products); // add products to cart
-                            TwoCoInlineCart.billing.setData(data.billing); // add products to cart
-                            TwoCoInlineCart.shipping.setData(data.shipping); // add products to cart
-
+                            TwoCoInlineCart.products.addMany(data.products);
+                            TwoCoInlineCart.billing.setData(data.billing_address);
+                            TwoCoInlineCart.shipping.setData(data.shipping_address);
+                            TwoCoInlineCart.cart.setSignature(data.signature);
                             TwoCoInlineCart.cart.checkout();
                             fullScreenLoader.stopLoader();
                         }

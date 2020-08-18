@@ -54,11 +54,6 @@ class IpnNotification
     protected $_paymentMethod;
 
     /**
-     * @var $_transactionBuilder
-     */
-    protected $_transactionBuilder;
-
-    /**
      * @var \Tco\Checkout\Helper\Ipn
      */
     protected $_ipnHelper;
@@ -103,26 +98,36 @@ class IpnNotification
      */
     protected $_msgManager;
 
+    /**
+     * @var \Magento\Sales\Model\Service\InvoiceService
+     */
+    protected $_invoiceService;
+
+    /**
+     * @var \Magento\Framework\DB\TransactionFactory
+     */
+    protected $_transactionFactory;
+
 
     public function __construct(
-        \Tco\Checkout\Model\Checkout $tcoCheckout,
-        \Tco\Checkout\Model\Api $tcoApi,
-        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
-        \Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface $transactionBuilder,
-        \Tco\Checkout\Helper\Ipn $ipnHelper,
-        \Magento\Sales\Model\OrderFactory $orderFactory,
-        \Magento\Sales\Model\OrderRepository $orderRepository,
-        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Quote\Model\QuoteRepository $quoteRepo,
-        \Magento\Quote\Model\QuoteManagement $quoteManagement,
-        \Magento\Framework\Message\ManagerInterface $messageManager
+      \Tco\Checkout\Model\Checkout $tcoCheckout,
+      \Tco\Checkout\Model\Api $tcoApi,
+      \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
+      \Tco\Checkout\Helper\Ipn $ipnHelper,
+      \Magento\Sales\Model\OrderFactory $orderFactory,
+      \Magento\Sales\Model\OrderRepository $orderRepository,
+      \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+      \Psr\Log\LoggerInterface $logger,
+      \Magento\Quote\Model\QuoteRepository $quoteRepo,
+      \Magento\Quote\Model\QuoteManagement $quoteManagement,
+      \Magento\Framework\Message\ManagerInterface $messageManager,
+      \Magento\Sales\Model\Service\InvoiceService $invoiceService,
+      \Magento\Framework\DB\TransactionFactory $transactionFactory
     ) {
         $this->_tcoCheckout = $tcoCheckout;
         $this->_tcoApi = $tcoApi;
         $this->_orderSender = $orderSender;
         $this->_paymentMethod = $this::PAYMENT_METHOD;
-        $this->_transactionBuilder = $transactionBuilder;
         $this->_ipnHelper = $ipnHelper;
         $this->_orderFactory = $orderFactory;
         $this->orderRepository = $orderRepository;
@@ -131,6 +136,8 @@ class IpnNotification
         $this->_quoteRepo = $quoteRepo;
         $this->_quoteManagement = $quoteManagement;
         $this->_msgManager = $messageManager;
+        $this->_invoiceService = $invoiceService;
+        $this->_transactionFactory = $transactionFactory;
     }
 
     /**
@@ -166,7 +173,7 @@ class IpnNotification
 
                     if (!$this->_order) {
                         throw new Exception(sprintf('No order could be created from quote with increment id: "%s".',
-                            $orderReservedId));
+                          $orderReservedId));
                     }
 
                     $sts = $this->_paymentMethod->getConfigData('order_status');
@@ -174,10 +181,6 @@ class IpnNotification
                     $this->_order->setExtOrderId($params['REFNO']);
                     $this->_order->save();
 
-                    if ($this->_paymentMethod->getConfigData('invoice_before_fraud_review')) {
-                        //Creates both invoice
-                        $this->_createInvoice($params);
-                    }
                 } else {
                     throw new Exception(sprintf('QUOTE is not valid for increment ID: "%s".', $orderReservedId));
                 }
@@ -188,6 +191,11 @@ class IpnNotification
         }
 
         try {
+            //Before fraud processing
+            if ($this->_paymentMethod->getConfigData('invoice_before_fraud_review')) {
+                $this->_createInvoice($params);
+            }
+
             $this->_processFraud($params);
 
             if (!$this->_isFraud($params)) {
@@ -197,8 +205,8 @@ class IpnNotification
 
             //IPN response to 2Checkout
             return $this->_ipnHelper->calculateIpnResponse(
-                $params,
-                $this->_paymentMethod->getConfigData('api_secret_key')
+              $params,
+              $this->_paymentMethod->getConfigData('api_secret_key')
             );
 
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
@@ -226,10 +234,10 @@ class IpnNotification
     {
         $order_sts = $params['ORDERSTATUS'];
         if (!empty($order_sts)) {
-            switch ($order_sts) {
+            switch (trim($order_sts)) {
                 case self::ORDER_STATUS_PENDING:
                     $comment = $this->_createNotificationComment(
-                        sprintf('IPN ORDERSTATUS : "%s". Order placed, waiting bank authorization.', "PENDING")
+                      sprintf('IPN ORDERSTATUS : "%s". Order placed, waiting bank authorization.', "PENDING")
                     );
                     $comment->save();
                     $this->_processOrderCreated();
@@ -237,10 +245,10 @@ class IpnNotification
 
                 case self::ORDER_STATUS_PURCHASE_PENDING:
                     $comment = $this->_createNotificationComment(
-                        sprintf(
-                            'IPN ORDERSTATUS : "%s". 2Checkout is waiting for the customer to make the payment.',
-                            "PURCHASE_PENDING"
-                        )
+                      sprintf(
+                        'IPN ORDERSTATUS : "%s". 2Checkout is waiting for the customer to make the payment.',
+                        "PURCHASE_PENDING"
+                      )
                     );
                     $comment->save();
                     break;
@@ -260,14 +268,14 @@ class IpnNotification
 
                 case self::ORDER_STATUS_PENDING_APPROVAL:
                     $comment = $this->_createNotificationComment(
-                        sprintf('IPN ORDERSTATUS : "%s". 2Checkout has yet to approve this order.', "PENDING_APPROVAL")
+                      sprintf('IPN ORDERSTATUS : "%s". 2Checkout has yet to approve this order.', "PENDING_APPROVAL")
                     );
                     $comment->save();
                     break;
 
                 case self::ORDER_STATUS_PAYMENT_AUTHORIZED:
                     $comment = $this->_createNotificationComment(
-                        sprintf('IPN ORDERSTATUS : "%s". The bank authorized the payment.', "PAYMENT_AUTHORIZED")
+                      sprintf('IPN ORDERSTATUS : "%s". The bank authorized the payment.', "PAYMENT_AUTHORIZED")
                     );
                     $comment->save();
                     if ($this->_paymentMethod->getConfigData('invoice_when_captured')) {
@@ -277,16 +285,24 @@ class IpnNotification
 
                 case self::ORDER_STATUS_COMPLETE:
                     $comment = $this->_createNotificationComment(
-                        sprintf('IPN ORDERSTATUS : "%s". 2Checkout marked the order as complete.', "COMPLETE")
+                      sprintf('IPN ORDERSTATUS : "%s". 2Checkout marked the order as complete.', "COMPLETE")
                     );
                     $comment->save();
 
-                    $this->_processOrderComplete($params);
+                    try {
+                        $this->_processOrderComplete();
+                        if($this->_areAllProductsVirtual()) {
+                            $this->_order->setStatus(\Magento\Sales\Model\Order::STATE_COMPLETE)->save();
+                        }
+                    } catch (Exception $e) {
+                        // rethrow the exception
+                        throw $e;
+                    }
                     break;
 
                 case $this::ORDER_STATUS_REFUND:
                     $comment = $this->_createNotificationComment(
-                        sprintf('IPN ORDERSTATUS: "%s". 2Checkout marked the order as refunded.', "REFUNDED")
+                      sprintf('IPN ORDERSTATUS: "%s". 2Checkout marked the order as refunded.', "REFUNDED")
                     );
                     $comment->save();
 
@@ -295,6 +311,24 @@ class IpnNotification
                     throw new Exception('Cannot handle Ipn message type for message: "%s".', $params['message_id']);
             }
         }
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function _areAllProductsVirtual()
+    {
+        // if any of the products bought is not virtual
+        // then the admin can ship them and properly change the order status
+        // in case they are we must mark the order as complete
+        foreach ($this->_order->getAllItems() as $item) {
+            if (!$item->getProduct()->isVirtual()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -315,14 +349,14 @@ class IpnNotification
     private function _processFraud($params)
     {
         if (isset($params['FRAUD_STATUS'])) {
-            switch ($params['FRAUD_STATUS']) {
+            switch (trim($params['FRAUD_STATUS'])) {
                 case $this::FRAUD_STATUS_DENIED:
                     $payment = $this->_order->getPayment();
                     $payment->setIsTransactionDenied(true);
                     $this->_order->setStatus(\Magento\Sales\Model\Order::STATUS_FRAUD);
 
                     $comment = $this->_createNotificationComment(
-                        sprintf('IPN ORDERSTATUS : "%s". Payment is under the suspicion of fraud!', "DENIED")
+                      sprintf('IPN ORDERSTATUS : "%s". Payment is under the suspicion of fraud!', "DENIED")
                     );
                     $comment->save();
 
@@ -332,13 +366,12 @@ class IpnNotification
                 case $this::FRAUD_STATUS_APPROVED:
                     $payment = $this->_order->getPayment();
                     $payment->setIsTransactionApproved(true);
-                    $this->_createTransaction($params);
 
                     $sts = $this->_paymentMethod->getConfigData('order_status');
                     $this->_order->setStatus($sts);
 
                     $comment = $this->_createNotificationComment(
-                        sprintf('FRAUD STATUS CHANGED: "%s"', $params['FRAUD_STATUS'])
+                      sprintf('FRAUD STATUS CHANGED: "%s"', $params['FRAUD_STATUS'])
                     );
                     $comment->save();
 
@@ -366,10 +399,9 @@ class IpnNotification
     }
 
     /**
-     * @param $params
-     * @throws Exception
+     * @throws \Exception
      */
-    protected function _processOrderComplete($params)
+    protected function _processOrderComplete()
     {
         $payment = $this->_order->getPayment();
         $payment->setIsTransactionApproved(true);
@@ -397,32 +429,16 @@ class IpnNotification
     /**
      * @param $response
      */
-    protected function _createTransaction($response)
+    protected function _createTransaction($response, $invoice = null)
     {
+        $transaction = null;
+        if($invoice) {
+            $transaction = $this->_transactionFactory->create()
+                ->addObject($invoice)
+                ->addObject($this->_order);
 
-        $formattedPrice = $this->_order->getBaseCurrency()->formatTxt(
-            $this->_order->getGrandTotal()
-        );
-        $message = __('The authorized amount is %1.', $formattedPrice);
-
-        $payment = $this->_order->getPayment();
-        $trans = $this->_transactionBuilder;
-        $transaction = $trans->setPayment($payment)
-            ->setOrder($this->_order)
-            ->setTransactionId($response['REFNO'])
-            ->setAdditionalInformation(
-                [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array)$response]
-            )
-            ->setFailSafe(true)
-            //build method creates the transaction and returns the object
-            ->build(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE);
-
-        $payment->addTransactionCommentsToOrder(
-            $transaction,
-            $message
-        );
-        $payment->setParentTransactionId(null);
-        $payment->save();
+            $transaction->save();
+        }
         $this->_order->save();
     }
 
@@ -433,26 +449,35 @@ class IpnNotification
     protected function _createInvoice($params)
     {
         try {
-            if ($this->_order->canInvoice()) {
+            if ($this->_order->canInvoice()){
                 $payment = $this->_order->getPayment();
                 $payment->setTransactionId($params['REFNO']);
-                $payment->setCurrencyCode($params['CURRENCY']);
-                $payment->setParentTransactionId($params['REFNO']);
                 $payment->setShouldCloseParentTransaction(true);
                 $payment->setIsTransactionClosed(0);
                 $payment->registerCaptureNotification($params['IPN_TOTALGENERAL'], true);
+                $payment->save();
                 $this->_order->save();
 
-                // notify customer
                 $invoice = $payment->getCreatedInvoice();
-                if ($invoice && !$this->_order->getEmailSent()) {
-                    $this->_orderSender->send($this->_order);
-                    $this->_order->addCommentToStatusHistory(
-                        __('You notified customer about invoice #%1.', $invoice->getIncrementId(), false)
-                    )->setIsCustomerNotified(
-                        true
-                    )->save();
+                if(!$invoice) {
+                    $invoice = $this->_invoiceService->prepareInvoice($this->_order);
+                    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                    $invoice->register();
                 }
+
+                // notify customer
+                if ($invoice) {
+                    $this->_createTransaction($params, $invoice);
+                    if (!$this->_order->getEmailSent()) {
+                        $this->_orderSender->send($this->_order);
+                        $this->_order->addCommentToStatusHistory(
+                            __('Notified customer about invoice #%1.', $invoice->getIncrementId(), false)
+                        )->setIsCustomerNotified(
+                            true
+                        )->save();
+                    }
+                }
+
                 $this->_order->setStatus($this->_paymentMethod->getConfigData('order_status'));
                 $this->_order->save();
             }
@@ -469,12 +494,12 @@ class IpnNotification
                 return $this->_quoteManagement->submit($quote);
             } catch (\Exception $e) {
                 $this->_logger->critical("Cannot create order from quote at IPN call!");
-                $this->_msgManage->addExceptionMessage($e, __('We can\'t place the order.'));
+                $this->_msgManager->addExceptionMessage($e, __('We can\'t place the order.'));
             }
             return null;
         } catch (Exception $ex) {
             $this->_logger->critical("Exception creating order in IPN notification!");
-            $this->_msgManage->addExceptionMessage($e, __('Exception creating order in IPN notification!'));
+            $this->_msgManager->addExceptionMessage($e, __('Exception creating order in IPN notification!'));
         }
     }
 }

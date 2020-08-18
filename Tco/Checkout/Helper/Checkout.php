@@ -98,6 +98,82 @@ class Checkout extends \Magento\Framework\App\Helper\AbstractHelper
         return bin2hex(hash_hmac('sha256', $string, $secret_word, true));
     }
 
+    /**
+     * @param $sub
+     * @param $iat
+     * @param $exp
+     * @param $buyLinkSecretWord
+     *
+     * @return string
+     */
+    public function generateJWTToken($sub, $iat, $exp, $buyLinkSecretWord)
+    {
+        $header = $this->encode(json_encode(['alg' => 'HS512', 'typ' => 'JWT']));
+        $payload = $this->encode(json_encode(['sub' => $sub, 'iat' => $iat, 'exp' => $exp]));
+        $signature = $this->encode(
+          hash_hmac('sha512', "$header.$payload", $buyLinkSecretWord, true)
+        );
+
+        return implode('.', [
+          $header,
+          $payload,
+          $signature
+        ]);
+    }
+
+    /**
+     * @param $data
+     *
+     * @return string|string[]
+     */
+    private function encode($data)
+    {
+        return str_replace('=', '', strtr(base64_encode($data), '+/', '-_'));
+    }
+
+    /**
+     * @param $payload
+     *
+     * @return mixed
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    public function getInlineSignature(
+      $merchantId,
+      $buyLinkSecretWord,
+      $payload
+    ) {
+        $jwtToken = $this->generateJWTToken(
+          $merchantId,
+          time(),
+          time() + 3600,
+          $buyLinkSecretWord
+        );
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+          CURLOPT_URL => "https://secure.2checkout.com/checkout/api/encrypt/generate/signature",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => json_encode($payload),
+          CURLOPT_HTTPHEADER => [
+            'content-type: application/json',
+            'cache-control: no-cache',
+            'merchant-token: ' . $jwtToken,
+          ],
+        ]);
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+        curl_close($curl);
+        if ($err) {
+            throw new \Magento\Framework\Exception\LocalizedException(__('Unable to get signature for payload'));
+        }
+
+        $response = json_decode($response, true);
+        if (JSON_ERROR_NONE !== json_last_error() || !isset($response['signature'])) {
+            throw new \Magento\Framework\Exception\LocalizedException(__('Received response is not recognized'));
+        }
+
+        return $response['signature'];
+    }
 
     /**
      * filter empty/null array entries.

@@ -25,7 +25,6 @@ class Response extends \Tco\Checkout\Controller\Checkout
                     if ($convert_plus_order) {
                         $params['email'] = isset($convert_plus_order['CustomerDetails']['Email']) ? $convert_plus_order['CustomerDetails']['Email'] : null;
                         $params['order-ext-ref'] = $convert_plus_order['ExternalReference'];
-                        $params['currency'] = $convert_plus_order['Currency'];
                         $params['total'] = $convert_plus_order['GrossPrice'];
                     }
                 }

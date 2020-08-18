@@ -48,7 +48,7 @@ define(
                     this.selectPaymentMethod();
                     let setBillingInfo = setBillingAddressAction();
                     setBillingInfo.done(function () {
-                        jsPaymentClient.tokens.generate(tco_component, billingDetails).then((response) => {
+                        jsPaymentClient.tokens.generate(tco_component, billingDetails).then(function (response) {
                             if (response.token) {
                                 let url = settings.placeOrder;
                                 $.ajax({
@@ -78,7 +78,7 @@ define(
                                 fullScreenLoader.stopLoader();
                                 console.error('Token response is NULL');
                             }
-                        }).catch((error) => {
+                        }).catch(function (error) {
                             console.error(error);
                             alert('An error has occurred, please try again later!');
                             fullScreenLoader.stopLoader();

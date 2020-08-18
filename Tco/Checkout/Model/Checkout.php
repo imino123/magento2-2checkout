@@ -233,7 +233,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $products_data = [];
         $totals = $quote->collectTotals()->save();
 
-        $_arr['name'] = _("Cart_" . $cart_data['order-ext-ref']);
+        $_arr['name'] = "Cart_" . $cart_data['order-ext-ref'];
         $_arr['price'] = $totals->getGrandTotal();
         $_arr["qty"] = 1;
         $_arr["type"] = "PRODUCT";
@@ -256,23 +256,70 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         ];
     }
 
+    /**
+     * @param $quote
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function buildInlineCheckoutRequest($quote)
     {
-        $params_array = $this->buildCheckoutParameters($quote);
+        $inlineParams = [];
+        $billingAddress = $quote->getBillingAddress();
+        $shippingAddress = $quote->getShippingAddress();
+        $shippingData = $this->setCheckoutShipping($shippingAddress);
+        $billingData = $this->setCheckoutBilling($billingAddress);
+        $totals = $quote->collectTotals()->save();
+        $inlineParams['order-ext-ref'] = $quote->getReservedOrderId();
+        $inlineParams['customer-ext-ref'] = $quote->getCustomer()->getEmail();
+        $inlineParams = array_merge($inlineParams, $billingData);
+        $inlineParams = array_merge($inlineParams, $shippingData);
+        $currentLocaleSetting = $this->_locale_resolver->getLocale();
+        $currentStoreLang = $this->_store->getLocaleCode();
+        $lang = !$currentStoreLang ? $currentLocaleSetting : $currentStoreLang;
+        $langCode = strstr($lang, '_', true);
+        $inlineParams['language'] = $langCode;
+        $inlineParams["test"] = 0;
+        if ($this->getConfigData('demo_mode')) {
+            $inlineParams["test"] = 1;
+        }
+        $productData[] = [
+            'type' => 'PRODUCT',
+            'name' => "Cart_" . $quote->getReservedOrderId(),
+            'price' => $totals->getGrandTotal(),
+            'tangible' => '0',
+            'quantity' => 1,
+        ];
 
-        //Generate the signature only for buy link || prepare inline
-        $params_array['setup_data']['mode'] = "DYNAMIC";
-        $params['setup'] = $params_array['setup_data'];
-        $params['products'] = $params_array['products_data'];
-        $params['cart'] = $params_array['cart_data'];
-        $params['shipping'] = $params_array['shipping_data'];
-        $params['billing'] = $params_array['billing_data'];
+        $inlineParams['return-method'] = [
+            'url' => $this->getReturnUrl(),
+            'type' => 'redirect',
+        ];
 
-        $params = $this->_helper->trimArray($params);
+        $inlineParams['products']= $productData;
+        $inlineParams['currency'] = strtoupper($quote->getQuoteCurrencyCode());
+        $inlineParams['mode'] = 'DYNAMIC';
+        $inlineParams['merchant'] = $this->getConfigData('merchant_id');
+        $inlineParams['dynamic'] = 1;
+        $inlineParams['src'] = 'MAGENTO2';
+        $inlineParams['signature'] = $this->_helper->getInlineSignature(
+          $this->getConfigData('merchant_id'),
+          $this->getConfigData('secret_word'),
+          $inlineParams
+        );
 
-        return $params;
+        $inlineParams = $this->_helper->trimArray($inlineParams);
+        $inlineParams['billing_address'] = ($billingData);
+        $inlineParams['shipping_address'] = ($shippingData);
+
+        return $inlineParams;
     }
 
+    /**
+     * @param $quote
+     *
+     * @return array
+     */
     public function buildCheckoutRequest($quote)
     {
         $buy_link_params = [];
@@ -373,10 +420,10 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     public function validateResponse($params)
     {
         $secret_word = $this->getConfigData('secret_word');
-        $merchant_id = $this->getConfigData('merchant_id');
+        $merchantId = $this->getConfigData('merchant_id');
         $key = $params['signature'];
 
-        if ((isset($params['merchant']) && $params['merchant'] == $merchant_id)
+        if ((isset($params['merchant']) && $params['merchant'] == $merchantId)
             || isset($params['refno'])
         ) {
             $hash = $this->_helper->generateSignature($params, $secret_word, true);
@@ -437,7 +484,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 );
                 $order->setExtOrderId($response['refno']);
             }
-            $payment->setCurrencyCode($response['currency']);
             $payment->setShouldCloseParentTransaction(true);
             $payment->setAdditionalInformation('tco_order_status', 'approved');
 
@@ -578,6 +624,11 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $merchantId = $this->getMerchantId();
         $requestDateTime = $this->_apiHelper->composeRequestDateTime();
         $paymentAdditionalInfo = $payment->getAdditionalInformation(\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS);
+
+        if(!isset($paymentAdditionalInfo['refno'])) {
+            throw new \Magento\Framework\Exception\LocalizedException(__('The order was not properly complete. The required parameter REFNO is missing from order information. Online refund is not possible. Please contact customer support.'));
+        }
+
         $hash = $this->_apiHelper->generateHash(
             $merchantId,
             $secretKey,
