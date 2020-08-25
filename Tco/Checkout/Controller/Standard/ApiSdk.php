@@ -29,7 +29,13 @@ class ApiSdk extends \Tco\Checkout\Controller\ApiController
                 if (isset($apiResponse['error_code']) && !empty($apiResponse['error_code'])) { // we get an response with ERRORS from 2co
                     $response->setHttpResponseCode(500);
                     $response->setData(['status' => false, 'message' => $apiResponse['message'], 'redirect' => null]);
-
+                } else if ($apiResponse['Errors']) { // authorization error
+                    $errorMessage = '';
+                    foreach ($apiResponse['Errors'] as $key => $value) {
+                        $errorMessage .= $value . PHP_EOL;
+                    }
+                    $response->setHttpResponseCode(402);
+                    $response->setData(['status' => false, 'message' => $errorMessage, 'redirect' => null]);
                 } else { // we successfully place an order with 2co
 
                     // first we check if we have to redirect to 3dSecure
