@@ -38,12 +38,12 @@ define(
                         $('#tco_payment_form').remove();
                         var data = response.fields;
                         if(response.inline && response.inline == 1) {
-
                             TwoCoInlineCart.setup.setConfig('cart', {'host': response.url});
                             TwoCoInlineCart.setup.setMerchant(data.merchant);
                             TwoCoInlineCart.setup.setMode(data.mode);
                             TwoCoInlineCart.register();
 
+                            TwoCoInlineCart.cart.setAutoAdvance(true);
                             TwoCoInlineCart.cart.setLanguage(data.language);
                             TwoCoInlineCart.cart.setCurrency(data.currency);
                             TwoCoInlineCart.cart.setTest(data.test);
