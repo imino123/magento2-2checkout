@@ -27,15 +27,19 @@ class Redirect3DSecure extends \Tco\Checkout\Controller\ApiController
                         $this->_prepareGuestQuote($quote, $apiResponse['BillingDetails']['Email']);
                     }
                     $quote->setPaymentMethod($this->getPaymentMethod());
-                    $quote->getPayment()->importData(['method' => $this->getPaymentMethod()->getCode()]);
-                    $order = $this->getPaymentMethod()->createMageOrder($quote, $apiResponse);
+                    if(!$quote->getPayment()->getQuote()) $quote->getPayment()->setQuote($quote);
+                    $quote->getPayment()->importData( [ 'method' => $this->getPaymentMethod()->getCode() ] );
+                    $order = $this->getPaymentMethod()->createMageOrder( $quote, $apiResponse );
 
-                    // set the checkoutSession for the redirect
-                    $this->getCheckoutSession()
-                         ->setLastSuccessQuoteId($quote->getId())
-                         ->setLastQuoteId($quote->getId())
-                         ->setLastRealOrderId($order->getIncrementId())
-                         ->setLastOrderId($order->getId());
+                    if($order)
+                   {
+                        // set the checkoutSession for the redirect
+                        $this->getCheckoutSession()
+                             ->setLastSuccessQuoteId( $quote->getId() )
+                             ->setLastQuoteId( $quote->getId() )
+                             ->setLastRealOrderId( $order->getIncrementId() )
+                             ->setLastOrderId( $order->getId() );
+                   }
 
                     $redirectUrl = $this->getPaymentMethod()->getRedirectUrl();
                 } catch (\Magento\Checkout\Exception $e) {

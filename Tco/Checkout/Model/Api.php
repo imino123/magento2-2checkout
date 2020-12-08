@@ -14,6 +14,7 @@ class Api extends \Magento\Payment\Model\Method\Cc
     protected $_isGateway               = true;
     protected $_request;
     protected $_helper;
+    protected $_ipnHelper;
     protected $_httpClientFactory;
 
     protected $_supportedCurrencyCodes = [
@@ -116,6 +117,7 @@ class Api extends \Magento\Payment\Model\Method\Cc
         \Magento\Framework\App\RequestInterface $request,
         \Magento\Framework\UrlInterface $urlBuilder,
         \Tco\Checkout\Helper\Api $helper,
+        \Tco\Checkout\Helper\Ipn $ipnHelper,
         \Magento\Framework\Model\Context $context,
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory,
@@ -145,6 +147,7 @@ class Api extends \Magento\Payment\Model\Method\Cc
             $data
         );
         $this->_helper = $helper;
+        $this->_ipnHelper = $ipnHelper;
         $this->_request = $request;
         $this->_httpClientFactory = $httpClientFactory;
         $this->_transactionBuilder = $transactionBuilder;
@@ -289,6 +292,9 @@ class Api extends \Magento\Payment\Model\Method\Cc
 
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $order = $objectManager->get('\Magento\Quote\Model\QuoteManagement')->submit($quote);
+            if(empty($order)){
+               $order = $this->_ipnHelper->getOrderByIncrementId($response['ExternalReference'], $response['RefNo']);
+           }
             $magentoState = $this->getMangetoOrderState($response['Status'], $response['ApproveStatus']);
 
             $order->setEmailSent(1)
