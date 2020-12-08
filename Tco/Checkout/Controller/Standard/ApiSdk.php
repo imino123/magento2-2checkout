@@ -41,6 +41,11 @@ class ApiSdk extends \Tco\Checkout\Controller\ApiController
                     // first we check if we have to redirect to 3dSecure
                     $is3DSecure = $this->getPaymentMethod()->authorize3DS($apiResponse);
                     if ($is3DSecure) {
+                        //set the payment method before we redirect
+                        $quote->setPaymentMethod($this->getPaymentMethod()->getCode());
+                        $quote->getPayment()->importData(['method' => $this->getPaymentMethod()->getCode()]);
+                        $this->quoteRepository->save($quote);
+
                         $response->setHttpResponseCode(200);
                         $response->setData([
                             'status'   => true,

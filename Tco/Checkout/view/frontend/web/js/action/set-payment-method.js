@@ -54,6 +54,7 @@ define(
                             TwoCoInlineCart.products.removeAll();
                             TwoCoInlineCart.products.addMany(data.products);
                             TwoCoInlineCart.billing.setData(data.billing_address);
+                            TwoCoInlineCart.billing.setCompanyName(data['company-name']);
                             TwoCoInlineCart.shipping.setData(data.shipping_address);
                             TwoCoInlineCart.cart.setSignature(data.signature);
                             TwoCoInlineCart.cart.checkout();

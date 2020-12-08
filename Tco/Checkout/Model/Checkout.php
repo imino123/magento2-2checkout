@@ -211,7 +211,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $cart_data['src'] = 'MAGENTO2';
         $cart_data['return-url'] = $this->getReturnUrl();
         $cart_data['return-type'] = 'redirect';
-        $cart_data['expiration'] = time() + (3600 * 5);
+	    $cart_data['company-name'] = !is_null($billing_address->getCompany()) ? $billing_address->getCompany() : $shipping_address->getCompany();
+	    $cart_data['expiration'] = time() + (3600 * 5);
         $cart_data['order-ext-ref'] = $quote->getReservedOrderId();
         $cart_data['item-ext-ref'] = date('YmdHis');
         $cart_data['customer-ext-ref'] = $quote->getCustomer()->getEmail();
@@ -302,7 +303,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $inlineParams['merchant'] = $this->getConfigData('merchant_id');
         $inlineParams['dynamic'] = 1;
         $inlineParams['src'] = 'MAGENTO2';
-        $inlineParams['signature'] = $this->_helper->getInlineSignature(
+	    $inlineParams['company-name'] = !is_null($billingAddress->getCompany()) ? $billingAddress->getCompany() : $shippingAddress->getCompany();
+	    $inlineParams['signature'] = $this->_helper->getInlineSignature(
           $this->getConfigData('merchant_id'),
           $this->getConfigData('secret_word'),
           $inlineParams
@@ -377,6 +379,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $billing_params["country"] = $billing_address->getCountryId();
         $billing_params["state"] = $billing_address->getRegion();
         $billing_params["email"] = $billing_address->getEmail();
+        $billing_params["company-name"] = $billing_address->getCompany();
         $billing_params["address"] = $billing_address->getStreet()[0];
         if (count($billing_address->getStreet()) > 1) {
             $billing_params["address2"] = $billing_address->getStreet()[1];
@@ -395,7 +398,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $shipping_params["ship-state"] = $shipping_address->getRegion();
         $shipping_params["ship-city"] = $shipping_address->getCity();
         $shipping_params["ship-email"] = $shipping_address->getEmail();
-        $shipping_params["ship-address"] = $shipping_address->getStreet()[0];
+	    $shipping_params["ship-address"] = $shipping_address->getStreet()[0];
         if (count($shipping_address->getStreet()) > 1) {
             $shipping_params["ship-address2"] = $shipping_address->getStreet()[1];
         }
