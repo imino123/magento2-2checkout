@@ -259,7 +259,7 @@ class Api extends \Magento\Payment\Model\Method\Cc
 
         $orderArr = [
             'Currency'                  => $currency,
-            'Language'                  => 'EN', // we dont have a language available in this shitty mangeto
+            'Language'                  => 'EN',
             'Country'                   => $quote->getBillingAddress()->getCountryId(),
             'CustomerIP'                => $quote->getRemoteIp(),
             'Source'                    => 'MAGENTO2',
