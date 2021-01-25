@@ -2,12 +2,13 @@ define(
     [
         'jquery',
         'Magento_Checkout/js/view/payment/default',
-        'Magento_Checkout/js/action/set-billing-address',
+        'Tco_Checkout/js/action/set-billing-address',
         'Tco_Checkout/js/action/set-payment-method',
         'Magento_Checkout/js/action/select-payment-method',
-        'Magento_Checkout/js/model/payment/additional-validators'
+        'Magento_Checkout/js/model/payment/additional-validators',
+        'Magento_Checkout/js/model/quote'
     ],
-    function ($, Component, setBillingAddressAction, setPaymentMethodAction, selectPaymentMethodAction, additionalValidators) {
+    function ($, Component, setBillingAddressAction, setPaymentMethodAction, selectPaymentMethodAction, additionalValidators, quote) {
         'use strict';
         return Component.extend({
             defaults: {

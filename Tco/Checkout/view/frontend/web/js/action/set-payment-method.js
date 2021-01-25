@@ -57,28 +57,23 @@ define(
                             TwoCoInlineCart.billing.setCompanyName(data['company-name']);
                             TwoCoInlineCart.shipping.setData(data.shipping_address);
                             TwoCoInlineCart.cart.setSignature(data.signature);
-                            TwoCoInlineCart.cart.checkout();
                             fullScreenLoader.stopLoader();
+                            TwoCoInlineCart.cart.checkout();
                         }
                         else {
-                            if(response.method == "GET"){
-                                fullScreenLoader.stopLoader();
-                                //customerData.invalidate(['cart']);
-                                window.location.href = response.url + $.param(data);
+                            if (response.method == "GET") {
+                                window.location.replace(response.url + $.param(data));
                             }
+                            fullScreenLoader.stopLoader();
                         }
                     } else {
                         fullScreenLoader.stopLoader();
-                        alert({
-                            content: $.mage.__('Sorry, something went wrong. Please try again.')
-                        });
+                        alert($.mage.__('Sorry, something went wrong. Please try again.'));
                     }
                 },
                 error: function (response) {
                     fullScreenLoader.stopLoader();
-                    alert({
-                        content: $.mage.__('Sorry, something went wrong. Please try again later.')
-                    });
+                    alert($.mage.__('Sorry, something went wrong. Please try again later.'));
                 }
             });
         };

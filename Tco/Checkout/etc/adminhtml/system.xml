@@ -62,6 +62,16 @@
                     <label>Invoice On Capture</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="reserve_order" translate="label" type="select" sortOrder="14" showInDefault="1"
+                       showInWebsite="1" showInStore="0">
+                    <label>Create Order On Redirect</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="cancel_pending_orders" translate="label" type="select" sortOrder="14" showInDefault="1"
+                       showInWebsite="1" showInStore="0">
+                    <label>Cancel Unpaid Orders</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <field id="allowspecific" translate="label" type="allowspecific" sortOrder="15" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Payment from Applicable Countries</label>
