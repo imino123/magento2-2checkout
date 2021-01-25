@@ -38,6 +38,10 @@ class Response extends \Tco\Checkout\Controller\Checkout
                 }
                 $order = $this->_ipnHelper->getOrderByIncrementId($params['order-ext-ref'], $params['refno']);
 
+                if (!$order && $paymentMethod->getConfigData('reserve_order')) {
+                    $order = $this->getOrderByIncrementId($params['order-ext-ref']);
+                }
+
                 if (!$order && !$quote) {
                     $this->messageManager->addExceptionMessage(new \Exception(__("Missing order and quote data!")),
                         __("Missing order and quote data!"));

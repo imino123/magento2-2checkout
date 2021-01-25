@@ -29,7 +29,25 @@ class Redirect extends \Tco\Checkout\Controller\Checkout
         $quote->setPaymentMethod($this->getPaymentMethod()->getCode());
         $quote->getPayment()->importData(['method' => $this->getPaymentMethod()->getCode()]);
 
-        $this->_quoteRepository->save($quote);
+        if ($this->getPaymentMethod()->getConfigData('reserve_order')) {
+            try {
+                //Quote has been updated. From now we process the checkout
+                $this->initCheckout();
+                $this->_cartManagement->placeOrder(
+                    $quote->getId(),
+                    $quote->getPayment()
+                );
+                $order = $this->getOrder();
+                $order->addStatusHistoryComment(__('Order created when redirected to payment page.'));
+
+            } catch (\Exception $e) {
+                $this->messageManager->addExceptionMessage($e, __('We can\'t place the order.'));
+                throw new \Magento\Checkout\Exception(_('Your payment could not be processed! Please try again later. Error: (' . $e->getMessage() . ')'));
+            }
+        } else {
+            $this->_quoteRepository->save($quote);
+        }
+
         $params = [];
         $params["inline"] = $this->getPaymentMethod()->getInline();
 
