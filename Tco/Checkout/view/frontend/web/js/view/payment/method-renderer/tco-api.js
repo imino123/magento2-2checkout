@@ -63,7 +63,9 @@ define(
                                     error: function (response, data) {
                                         console.error(response.responseJSON, data);
                                         if (!response.responseJSON.status && response.responseJSON.message) {
-                                            alert(response.responseJSON.message);
+                                            var errorMessage = response.responseJSON.message;
+                                            errorMessage = errorMessage.replace(/(<([^>]+)>)/gi, "");
+                                            alert($.mage.__(errorMessage));
                                         } else {
                                             alert(settings.processingError);
                                         }
