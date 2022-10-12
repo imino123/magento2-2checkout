@@ -42,56 +42,61 @@
                     <label>Use Inline Checkout</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="order_status" translate="label" type="select" sortOrder="11" showInDefault="1"
+                <field id="inline_type" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1"
+                       showInStore="0">
+                    <label>Template</label>
+                    <source_model>Tco\Checkout\Model\InlineType</source_model>
+                </field>
+                <field id="order_status" translate="label" type="select" sortOrder="12" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>New Order Status</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status</source_model>
                 </field>
-                <field id="invoice_before_fraud_review" translate="label" type="select" sortOrder="12" showInDefault="1"
+                <field id="invoice_before_fraud_review" translate="label" type="select" sortOrder="13" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Invoice Before Fraud Review</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="invoice_after_fraud_review" translate="label" type="select" sortOrder="13" showInDefault="1"
+                <field id="invoice_after_fraud_review" translate="label" type="select" sortOrder="14" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Invoice After Fraud Review</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="invoice_when_captured" translate="label" type="select" sortOrder="14" showInDefault="1"
+                <field id="invoice_when_captured" translate="label" type="select" sortOrder="15" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Invoice On Capture</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="reserve_order" translate="label" type="select" sortOrder="14" showInDefault="1"
+                <field id="reserve_order" translate="label" type="select" sortOrder="16" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Create Order On Redirect</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="cancel_pending_orders" translate="label" type="select" sortOrder="14" showInDefault="1"
+                <field id="cancel_pending_orders" translate="label" type="select" sortOrder="17" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Cancel Unpaid Orders</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="15" showInDefault="1"
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="18" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Payment from Applicable Countries</label>
                     <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
                 </field>
-                <field id="specificcountry" translate="label" type="multiselect" sortOrder="16" showInDefault="1"
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="19" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Payment from Specific Countries</label>
                     <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
                 </field>
-                <field id="min_order_total" translate="label" type="text" sortOrder="17" showInDefault="1"
+                <field id="min_order_total" translate="label" type="text" sortOrder="20" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Minimum Order Total</label>
                 </field>
-                <field id="max_order_total" translate="label" type="text" sortOrder="18" showInDefault="1"
+                <field id="max_order_total" translate="label" type="text" sortOrder="21" showInDefault="1"
                        showInWebsite="1" showInStore="0">
                     <label>Maximum Order Total</label>
                     <comment>Leave empty to disable limit</comment>
                 </field>
-                <field id="sort_order" translate="label" type="text" sortOrder="19" showInDefault="1" showInWebsite="1"
+                <field id="sort_order" translate="label" type="text" sortOrder="22" showInDefault="1" showInWebsite="1"
                        showInStore="0">
                     <label>Sort Order</label>
                 </field>

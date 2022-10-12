@@ -301,6 +301,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $inlineParams['currency'] = strtoupper($quote->getQuoteCurrencyCode());
         $inlineParams['mode'] = 'DYNAMIC';
         $inlineParams['merchant'] = $this->getConfigData('merchant_id');
+        $inlineParams['customization'] = $this->getConfigData('inline_type');
         $inlineParams['dynamic'] = 1;
         $inlineParams['src'] = 'MAGENTO2';
 	    $inlineParams['company-name'] = !is_null($billingAddress->getCompany()) ? $billingAddress->getCompany() : $shippingAddress->getCompany();

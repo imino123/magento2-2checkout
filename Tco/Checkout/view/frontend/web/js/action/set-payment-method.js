@@ -38,7 +38,7 @@ define(
                         $('#tco_payment_form').remove();
                         var data = response.fields;
                         if(response.inline && response.inline == 1) {
-                            TwoCoInlineCart.setup.setConfig('cart', {'host': response.url});
+                            TwoCoInlineCart.setup.setConfig('cart', {'host': response.url, 'customization': data.customization});
                             TwoCoInlineCart.setup.setMerchant(data.merchant);
                             TwoCoInlineCart.setup.setMode(data.mode);
                             TwoCoInlineCart.register();
